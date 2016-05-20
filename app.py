@@ -1,9 +1,10 @@
-from flask import Flask, render_template, json, request
+from flask import Flask, render_template, json, request, redirect, session
 from Client import Client
 #from werkzeug import generate_password_hash, check_password_hash
 
 cliente =Client()
 app = Flask(__name__)
+app.secret_key = 'por que deveria decir mi clave secreta?'
 
 @app.route("/")
 def main():
@@ -13,9 +14,28 @@ def main():
 def showSignUp():
     return render_template('signup.html')
 
+@app.route('/showAddWish')
+def showAddWish():
+    return render_template('addWish.html')
+
 @app.route('/showSignin')
 def showSignin():
-    return render_template('signin.html')
+    if session.get('user'):
+        return render_template('userHome.html')
+    else:
+        return render_template('signin.html')
+
+@app.route('/userHome')
+def userHome():
+    if session.get('user'):
+        return render_template('userHome.html')
+    else:
+        return render_template('error.html',error = 'Unauthorized Access')
+
+@app.route('/logout')
+def logout():
+    session.pop('user',None)
+    return redirect('/')
 
 @app.route('/signUp',methods=['POST','GET'])
 def signUp():
@@ -24,20 +44,22 @@ def signUp():
     _password = request.form['inputPassword']
 
     # validate the received values
-    if cliente. insertar_usuarios(_name,_email,_password):
+    if cliente.insertar_usuarios(_name,_email,_password):
         print 'introdujo los datos'
     else:
         print 'no se pudo introducir los datos'
 
 
+
 @app.route('/validateLogin',methods=['POST'])
 def validateLogin():
-    try:
-        _username = request.form['inputEmail']
-        _password = request.form['inputPassword']
-
-    except Exception as e:
-        return render_template('error.html',error = str(e))
+    _username = request.form['inputEmail']
+    _password = request.form['inputPassword']
+    if cliente.verificar_usuario(_username,_password):
+        session['user'] = True
+        return redirect('/userHome')
+    else:
+        return render_template('error.html',error = 'acseso no autorizado')
 
 
 if __name__ == "__main__":
