@@ -30,7 +30,7 @@ def userHome():
     if session.get('user'):
         return render_template('userHome.html')
     else:
-        return render_template('error.html',error = 'Unauthorized Access')
+        return render_template('error.html',error = 'Acceso no Autorizado')
 
 @app.route('/logout')
 def logout():
@@ -56,11 +56,20 @@ def validateLogin():
     _username = request.form['inputEmail']
     _password = request.form['inputPassword']
     if cliente.verificar_usuario(_username,_password):
-        session['user'] = True
+        session['user'] = _username
         return redirect('/userHome')
     else:
         return render_template('error.html',error = 'acseso no autorizado')
 
+@app.route('/addWish',methods=['POST'])
+def addWish():
+    _title = request.form['inputTitle']
+    _description = request.form['inputDescription']
+    _user = session.get('user')
+    if cliente.insertar_comentario(_title,_description,_user):
+        return redirect('/userHome')
+    else:
+        return render_template('error.html',error = 'An error occurred!')
 
 if __name__ == "__main__":
     app.run()
